@@ -2,22 +2,31 @@
 import socket, select, string, sys
 
 
+
 class Main:
 
-    def __init__(self, host, port, username):
+    def __init__(self):
         # if (len(sys.argv) < 4):
         #     print('Usage : python telnet.py hostname port username')
         #
         #     sys.exit()
 
-        self.host = host
-        self.port = port
-        self.username = username
+        self.host = ""
+        self.port = 0
+        self.username = ""
+        self.send = False
+        self.message = ""
 
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(2)
 
         self.message_list = []
+
+    def send_message(self, message):
+        msg = message
+        self.message_list.append([msg, True])
+        msg += "///" + self.username
+        self.s.send(msg.encode())
 
 
     def prompt(self):
@@ -32,17 +41,19 @@ class Main:
 
 
     # main function
-    def main_loop(self):
-
+    def main_loop(self, host, port, username):
+        self.host = host
+        self.port = port
+        self.username = username
         # connect to remote host
         try:
-            self.s.connect((self.host, self.port))
+            self.s.connect((self.host, int(self.port)))
         except:
             print('Unable to connect')
             sys.exit()
 
         print('Connected to remote host. Start sending messages')
-        self.prompt()
+        # self.prompt()
 
         while 1:
             socket_list = [sys.stdin, self.s]
@@ -59,16 +70,24 @@ class Main:
                     #     sys.exit()
                     if data:
                         # print data
+                        self.message_list.append([data, False])
                         sys.stdout.write(data.decode())
-                        self.prompt()
-
-
+                        # self.prompt()
+                #
+                #
                 # user entered a message
                 else:
                     msg = sys.stdin.readline()
+                    self.message_list.append([msg, True])
                     msg += "///" + self.username
                     self.s.send(msg.encode())
                     self.prompt()
 
-Main = Main("0.0.0.0", 5000, "HPringles")
-Main.main_loop()
+
+
+
+
+# Debug commands
+
+# Main = Main()
+# Main.main_loop("localhost", 5000, "HPringles")
